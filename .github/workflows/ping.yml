@@ -1,0 +1,20 @@
+﻿# danga-admin keepalive ping
+# Wakes the site (and its Neon free-tier database) during Korean business hours
+# so the first visit of the day is fast. Runs every 4 minutes, KST 08:00-19:59, Mon-Fri.
+name: ping
+on:
+  schedule:
+    - cron: "*/4 23 * * 0-4"   # UTC 23h Sun-Thu = KST 08h Mon-Fri
+    - cron: "*/4 0-10 * * 1-5" # UTC 00-10h Mon-Fri = KST 09-19h Mon-Fri
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: curl -fsS --max-time 30 https://danga-admin.vercel.app/api/health
+      - uses: actions/checkout@v4
+      - name: Keep workflow enabled (GitHub disables crons after 60 days of inactivity)
+        uses: gautamkrishnar/keepalive-workflow@v2
